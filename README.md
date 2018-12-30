@@ -1,7 +1,7 @@
 # areaexample
 
 ---- CREATE DATABASE ---
-
+```
  CREATE DATABASE areaexample;
  CREATE USER areaexample WITH PASSWORD 'areaexample';
  /c areaexample
@@ -10,19 +10,19 @@
  GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO pguser;
  GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO areaexample;
  GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO areaexample;
-
+```
 ---- fill it ---
-
-psql areaexample < db.sql
-
+```
+> psql areaexample < db.sql
+```
 ---- nginx config ---
-
+```
 server {
     listen 80;
     server_name areaexample.loc;
     root /var/www/areaexample/src/public;
 
-    try_filet $uri /index.php?$args;
+    try_files $uri /index.php?$args;
 
     location ~ \.php$ {
         internal;
@@ -32,6 +32,7 @@ server {
         include fastcgi_params;
     }
 }
-
+```
 --- composer ---
+```
 > composer update

@@ -24,16 +24,30 @@ $resolver->addConnection('default', $conn);
 $resolver->setDefaultConnection('default');
 \Illuminate\Database\Eloquent\Model::setConnectionResolver($resolver);
 
-$zones = [];
 $container['view'] = new \Slim\Views\PhpRenderer('./templates/');
 
 $app->get('/', function (Request $request, Response $response) {
-    $zones = \Zone::all();
+//    $zones = \Zone::all();
+    $zones = \Zone::select( \Illuminate\Database\Connection::raw('id, ST_AsGeoJSON(geom) AS geom') )->get();
     $response = $this->view->render($response, 'map.php', ['zones' => $zones]);
 });
 
 $app->post('/', function (Request $request, Response $response) {
-    $response->write('TODO!');
+    $allPostPutVars = $request->getParsedBody();
+    
+    	foreach( $allPostPutVars['zone'] as $id => $geom ) {
+            $zone = \Zone::find( $id );
+            if( !$zone ) {
+                $zone = new \Zone();
+            }
+            $zone->geom = \Illuminate\Database\Connection::raw('ST_GeomFromGeoJSON(\''.$geom.'\')');
+            if( !$zone->geom ) {
+		$zone->delete();
+            } else {
+		$zone->save();
+            }
+        }
+    return $response->withStatus(302)->withHeader('Location', '/');
 });
 $app->run();
 

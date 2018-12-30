@@ -15,7 +15,7 @@
 <button type="button" class="btn btn-success" id="add-new-zone">Add new zone</button>
 
 <?php foreach( $zones as $zone ): ?>
-	<input type="hidden" name="zone[<?=$zone->getId() ?>]" value="<?= $zone->getBorderJson() ?>" class="zonedata" data-zone-id="<?= $zone->getPrimaryKey() ?>" >
+<input type="hidden" name="zone[<?=$zone->id?>]" value='<?= $zone->geom ?>' class="zonedata" data-zone-id="<?= $zone->id ?>" >
 <?php endforeach; ?>
         </div>
             </form>
@@ -51,17 +51,15 @@ var map = new ol.Map({
 });
 
 $.each( $('.zonedata'), function(i, v) {
-	showPolygone( map, JSON.parse( $(v).val() ), $(v).attr('data-zone-id') );
+	showPolygone( map, $(v).val(), $(v).attr('data-zone-id') );
 } );
 
 addAllInteractions();
 
 function showPolygone( map, coordinates, id ) {
-	var polyFeature = new ol.Feature({
-			geometry: new ol.geom.Polygon([
-				coordinates
-			])
-	});
+
+        var format = new ol.format.GeoJSON();
+        polyFeature = format.readFeature(coordinates)
 	polyFeature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
 	polyFeature.setId(id);
 	map_vector.getSource().addFeature( polyFeature );
@@ -132,7 +130,8 @@ function addAllInteractions() {
 
 function updateZone( ) {
 	var geom = this.getGeometry().clone().transform( 'EPSG:3857', 'EPSG:4326' );
-	$('input[name=\"zone['+this.getId()+']\"]').val( JSON.stringify( geom.getCoordinates()[0] ) );
+        var format = new ol.format.GeoJSON();
+	$('input[name=\"zone['+this.getId()+']\"]').val( format.writeGeometry( geom ) );
 }
 
 function deleteZone( id ) {
@@ -142,10 +141,13 @@ function deleteZone( id ) {
 function createZone( feature ) {
 	var geom = feature.getGeometry().clone().transform( 'EPSG:3857', 'EPSG:4326' );
 	var zone_name = 'zone[]';
+        
+        var format = new ol.format.GeoJSON();
+        
 	$('<input>').attr({
     type: 'hidden',
     name: zone_name,
-	}).val( JSON.stringify( geom.getCoordinates()[0] ) ).
+	}).val( format.writeGeometry( geom ) ).
 	appendTo('#zones-form');
 	addAllInteractions();
 }
